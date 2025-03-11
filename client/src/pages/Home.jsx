@@ -6,7 +6,8 @@ const Home = () => {
   return (
     <div className="home-container">
       <div className="home-content">
-        <h1 className="home-title">React Chess</h1>
+        <h1 className="home-title">Chess <span className="title-subtext">by Ayush Mishra</span></h1>
+        
         <p className="home-description">
           Play chess online with friends or join a game as a spectator.
           Create a room or join an existing one using a unique room ID.

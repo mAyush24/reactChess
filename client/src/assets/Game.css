@@ -2,8 +2,9 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #f5f5f5;
-  background: linear-gradient(to bottom right, #e7ecef, #f5f5f5);
+  background-color: #313030;
+  /* background: linear-gradient(to bottom right, #e7ecef, #f5f5f5); */
+  background: linear-gradient(to bottom right, #5b6a72, #776363);
   padding: 20px;
 }
 
@@ -12,7 +13,8 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  background-color: white;
+  /* background-color: rgb(51, 49, 49); */
+  background-color: #333;
   padding: 15px 20px;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -20,7 +22,7 @@
 
 .game-header h1 {
   font-size: 1.8rem;
-  color: #333;
+  color: white;
   margin: 0;
 }
 
@@ -29,7 +31,7 @@
   align-items: center;
   gap: 10px;
   font-size: 1.1rem;
-  color: #555;
+  color: #666;
 }
 
 .copy-button {
@@ -43,7 +45,7 @@
 }
 
 .copy-button:hover {
-  background-color: #f0f0f0;
+  background-color: #666;
 }
 
 .game-content {
@@ -55,7 +57,7 @@
 
 .board-section {
   flex: 2;
-  background-color: white;
+  background-color: #333;
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -180,20 +182,22 @@
 }
 
 .exit-button {
-  background-color: #6c757d;
+  /* background-color: #fff; */
+  background: transparent;
   color: white;
   border: none;
-  padding: 12px 25px;
-  font-size: 1rem;
+  /* padding: 12px 25px; */
+  font-size: 1.5rem;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s ease;
+  width: fit-content;
 }
 
 .exit-button:hover {
-  background-color: #5a6268;
+  /* background-color: #86b357; */
   transform: translateY(-2px);
-  box-shadow: 0 5px 10px rgba(108, 117, 125, 0.3);
+  /* box-shadow: 0 5px 10px rgba(108, 117, 125, 0.3); */
 }
 
 /* Responsive design */
