@@ -150,9 +150,19 @@ io.on('connection', (socket) => {
       // Handle player disconnection
       if (room.players.white === socket.id) {
         room.players.white = null;
+        // If game was in progress, emit a gameOver event with forfeit reason
+        if (room.status === 'playing') {
+          io.to(roomId).emit('gameOver', { reason: 'forfeit', winner: 'black' });
+          room.status = 'ended';
+        }
         io.to(roomId).emit('playerDisconnected', { color: 'white' });
       } else if (room.players.black === socket.id) {
         room.players.black = null;
+        // If game was in progress, emit a gameOver event with forfeit reason
+        if (room.status === 'playing') {
+          io.to(roomId).emit('gameOver', { reason: 'forfeit', winner: 'white' });
+          room.status = 'ended';
+        }
         io.to(roomId).emit('playerDisconnected', { color: 'black' });
       } else {
         // Handle spectator disconnection
