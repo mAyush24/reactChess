@@ -91,7 +91,3 @@ reactChess/
 3. Create a new room or join an existing one
 4. Share the room ID with a friend to play together
 5. Anyone can join as a spectator once two players have joined
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details. 
