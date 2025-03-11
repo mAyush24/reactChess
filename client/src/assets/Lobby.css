@@ -1,0 +1,226 @@
+.lobby-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f5f5f5;
+  padding: 20px;
+  background: linear-gradient(to bottom right, #e7ecef, #f5f5f5);
+}
+
+.lobby-content {
+  max-width: 800px;
+  width: 100%;
+  background-color: white;
+  border-radius: 10px;
+  padding: 30px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.lobby-title {
+  font-size: 2.5rem;
+  margin-bottom: 30px;
+  color: #333;
+  text-align: center;
+  font-weight: 700;
+}
+
+.lobby-form {
+  margin-bottom: 30px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 8px;
+  color: #444;
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px 15px;
+  font-size: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-group input:focus {
+  border-color: #4a65a3;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(74, 101, 163, 0.2);
+}
+
+.error-message {
+  padding: 10px;
+  margin-bottom: 20px;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 5px;
+  color: #721c24;
+  font-size: 0.9rem;
+}
+
+.lobby-buttons {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.lobby-button {
+  flex: 1;
+  padding: 12px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.lobby-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.create-button {
+  background-color: #4a65a3;
+  color: white;
+}
+
+.create-button:hover:not(:disabled) {
+  background-color: #3a5183;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 10px rgba(74, 101, 163, 0.3);
+}
+
+.join-button {
+  background-color: #6c757d;
+  color: white;
+}
+
+.join-button:hover:not(:disabled) {
+  background-color: #5a6268;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 10px rgba(108, 117, 125, 0.3);
+}
+
+.available-rooms {
+  margin-top: 40px;
+}
+
+.available-rooms h2 {
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+  color: #444;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.no-rooms {
+  text-align: center;
+  color: #666;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+}
+
+.room-list {
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  border-radius: 6px;
+}
+
+.room-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.room-item:last-child {
+  border-bottom: none;
+}
+
+.room-id {
+  font-weight: 500;
+  color: #444;
+}
+
+.join-room-button {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.join-room-button:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.join-room-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  margin-top: 30px;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.status-indicator.connected {
+  background-color: #28a745;
+}
+
+.status-indicator.disconnected {
+  background-color: #dc3545;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .lobby-content {
+    padding: 20px;
+  }
+  
+  .lobby-title {
+    font-size: 2rem;
+  }
+  
+  .lobby-buttons {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .lobby-title {
+    font-size: 1.8rem;
+  }
+  
+  .lobby-content {
+    padding: 15px;
+  }
+} 
