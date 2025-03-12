@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
-import '../assets/Lobby.css';
+import '../assets/CreateJoinRoom.css';
 
-const Lobby = () => {
+const JoinRoom = () => {
   const [roomId, setRoomId] = useState('');
   const [username, setUsername] = useState('');
   const [availableRooms, setAvailableRooms] = useState([]);
@@ -33,41 +33,6 @@ const Lobby = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Create a new game room
-  const createRoom = () => {
-    if (!connected) {
-      setError('Not connected to server');
-      return;
-    }
-    
-    if (!username.trim()) {
-      setError('Please enter a username');
-      return;
-    }
-    
-    setLoading(true);
-    setError('');
-    
-    socket.emit('createRoom', (response) => {
-      setLoading(false);
-      
-      if (response.error) {
-        setError(response.error);
-      } else {
-        // Store username in session storage
-        sessionStorage.setItem('username', username);
-        // Navigate to the game page
-        navigate(`/game/${response.roomId}`, { 
-          state: { 
-            playerColor: 'white',
-            isSpectator: false,
-            roomId: response.roomId 
-          } 
-        });
-      }
-    });
-  };
-
   // Join an existing game room
   const joinRoom = (roomIdToJoin) => {
     if (!connected) {
@@ -90,7 +55,7 @@ const Lobby = () => {
     setLoading(true);
     setError('');
     
-    socket.emit('joinRoom', joinRoomId, (response) => {
+    socket.emit('joinRoom', { roomId: joinRoomId, username }, (response) => {
       setLoading(false);
       
       if (response.error) {
@@ -111,12 +76,26 @@ const Lobby = () => {
     });
   };
 
+  // Get the appropriate display text for a room
+  const getRoomDisplayText = (room) => {
+    if (room.status === 'waiting') {
+      return `${room.whitePlayer}'s room (waiting)`;
+    } else if (room.status === 'playing') {
+      return `${room.whitePlayer} vs ${room.blackPlayer || 'Opponent'} (playing)`;
+    } else {
+      return `${room.whitePlayer}'s room`;
+    }
+  };
+
   return (
-    <div className="lobby-container">
-      <div className="lobby-content">
-        <h1 className="lobby-title">Game Lobby</h1>
+    <div className="room-container">
+      <div className="room-content">
+        <h1 className="room-title">Join a Room</h1>
+        <p className="room-description">
+          Enter your username and join an existing room by ID or from the list below.
+        </p>
         
-        <div className="lobby-form">
+        <div className="room-form">
           <div className="form-group">
             <label htmlFor="username">Username</label>
             <input
@@ -129,7 +108,7 @@ const Lobby = () => {
           </div>
           
           <div className="form-group">
-            <label htmlFor="roomId">Room ID (for joining)</label>
+            <label htmlFor="roomId">Room ID</label>
             <input
               type="text"
               id="roomId"
@@ -141,20 +120,19 @@ const Lobby = () => {
           
           {error && <div className="error-message">{error}</div>}
           
-          <div className="lobby-buttons">
+          <div className="room-buttons">
             <button
-              className="lobby-button create-button"
-              onClick={createRoom}
-              disabled={loading || !connected}
-            >
-              {loading ? 'Creating...' : 'Create Room'}
-            </button>
-            <button
-              className="lobby-button join-button"
+              className="room-button join-button"
               onClick={() => joinRoom()}
               disabled={loading || !connected || !roomId}
             >
-              {loading ? 'Joining...' : 'Join Room'}
+              {loading ? 'Joining...' : 'Join by Room ID'}
+            </button>
+            <button
+              className="room-button back-button"
+              onClick={() => navigate('/')}
+            >
+              Back to Home
             </button>
           </div>
         </div>
@@ -166,14 +144,24 @@ const Lobby = () => {
           ) : (
             <div className="room-list">
               {availableRooms.map((room) => (
-                <div key={room.id} className="room-item">
-                  <span className="room-id">Room ID: {room.id}</span>
+                <div 
+                  key={room.id} 
+                  className="room-item"
+                  data-status={room.status}
+                >
+                  <div className="room-info">
+                    <span className="room-name">{getRoomDisplayText(room)}</span>
+                    <span className="room-id">ID: {room.id}</span>
+                    {room.spectatorCount > 0 && (
+                      <span className="spectator-count">👁️ {room.spectatorCount}</span>
+                    )}
+                  </div>
                   <button
                     className="join-room-button"
                     onClick={() => joinRoom(room.id)}
-                    disabled={loading || !connected}
+                    disabled={loading || !connected || !username.trim()}
                   >
-                    Join
+                    {room.status === 'playing' ? 'Spectate' : 'Join'}
                   </button>
                 </div>
               ))}
@@ -190,4 +178,4 @@ const Lobby = () => {
   );
 };
 
-export default Lobby; 
+export default JoinRoom; 

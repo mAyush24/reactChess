@@ -1,0 +1,278 @@
+.room-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  /* background-color: #f5f5f5; */
+  background: linear-gradient(to bottom right, #5b6a72, #776363);
+
+}
+
+.room-content {
+  max-width: 800px;
+  width: 100%;
+  background-color: #333;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+}
+
+.room-title {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  color: #fff;
+  text-align: center;
+}
+
+.room-description {
+  text-align: center;
+  color: #888;
+  margin-bottom: 25px;
+  font-size: 1.1rem;
+}
+
+.room-form {
+  margin-bottom: 30px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+  border-color: #4a65a3;
+  outline: none;
+}
+
+.error-message {
+  color: #e74c3c;
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #fde8e7;
+  border-left: 3px solid #e74c3c;
+  border-radius: 3px;
+}
+
+.room-buttons {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.room-button {
+  padding: 12px 25px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+  flex: 1;
+}
+
+.room-button:hover {
+  transform: translateY(-2px);
+}
+
+.create-button {
+  background-color: #4a65a3;
+  color: white;
+}
+
+.create-button:hover {
+  background-color: #3a5183;
+}
+
+.join-button {
+  background-color: #27ae60;
+  color: white;
+}
+
+.join-button:hover {
+  background-color: #219653;
+}
+
+.back-button {
+  background-color: #27ae60;
+  color: white;
+}
+
+.back-button:hover {
+  background-color: #219653;
+}
+
+.room-button:disabled {
+  background-color: #e0e0e0;
+  color: #a0a0a0;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.available-rooms {
+  margin-top: 30px;
+  border-top: 1px solid #eee;
+  padding-top: 30px;
+}
+
+.available-rooms h2 {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  color: #fff;
+  text-align: center;
+}
+
+.no-rooms {
+  text-align: center;
+  color: #888;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 5px;
+}
+
+.room-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.room-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  border-left: 4px solid #4a65a3;
+  transition: transform 0.2s, box-shadow 0.3s;
+}
+
+.room-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.room-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.room-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.room-id {
+  color: #777;
+  font-size: 0.9rem;
+}
+
+.spectator-count {
+  color: #777;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.join-room-button {
+  background-color: #27ae60;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.join-room-button:hover {
+  background-color: #219653;
+}
+
+.join-room-button:disabled {
+  background-color: #e0e0e0;
+  color: #a0a0a0;
+  cursor: not-allowed;
+}
+
+/* Playing games have a different color */
+.room-item[data-status="playing"] {
+  border-left-color: #e67e22;
+}
+
+/* Connection status indicator */
+.connection-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+  color: #666;
+}
+
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.status-indicator.connected {
+  background-color: #27ae60;
+}
+
+.status-indicator.disconnected {
+  background-color: #e74c3c;
+}
+
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+  .room-content {
+    padding: 20px;
+  }
+  
+  .room-title {
+    font-size: 2rem;
+  }
+  
+  .room-buttons {
+    flex-direction: column;
+  }
+  
+  .room-button {
+    width: 100%;
+  }
+  
+  .room-item {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+  
+  .join-room-button {
+    align-self: flex-end;
+  }
+} 

@@ -10,11 +10,14 @@ const Home = () => {
         
         <p className="home-description">
           Play chess online with friends or join a game as a spectator.
-          Create a room or join an existing one using a unique room ID.
+          Create a room or join an existing one in just a few clicks.
         </p>
         <div className="home-buttons">
-          <Link to="/lobby" className="home-button primary-button">
-            Enter Lobby
+          <Link to="/create-room" className="home-button primary-button">
+            Create a Room
+          </Link>
+          <Link to="/join-room" className="home-button secondary-button">
+            Join a Room
           </Link>
         </div>
         <div className="home-features">

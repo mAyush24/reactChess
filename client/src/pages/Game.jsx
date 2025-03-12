@@ -17,6 +17,7 @@ const Game = () => {
   const [username, setUsername] = useState('');
   const [gameOver, setGameOver] = useState(false);
   const [gameOverReason, setGameOverReason] = useState('');
+  const [opponentDisconnected, setOpponentDisconnected] = useState(false);
 
   // Get game state from router or default values
   useEffect(() => {
@@ -26,9 +27,12 @@ const Game = () => {
     } else {
       // If no state is provided, try to join as spectator
       if (socket && connected) {
-        socket.emit('joinRoom', roomId, (response) => {
+        const storedUsername = sessionStorage.getItem('username') || 'Spectator';
+        setUsername(storedUsername);
+
+        socket.emit('joinRoom', { roomId, username: storedUsername }, (response) => {
           if (response.error) {
-            navigate('/lobby');
+            navigate('/join-room');
           } else {
             setPlayerColor(response.color);
             setIsSpectator(response.color === 'spectator');
@@ -76,6 +80,7 @@ const Game = () => {
         ...prevMessages,
         { text: disconnectMessage, sender: 'System', timestamp: new Date() }
       ]);
+      setOpponentDisconnected(true);
     });
 
     return () => {
@@ -126,6 +131,16 @@ const Game = () => {
     // TODO: Show a toast or notification
   };
 
+  const getGameStatus = () => {
+    if (gameOver) {
+      return gameOverReason;
+    } else if (opponentDisconnected) {
+      return 'Opponent has disconnected';
+    } else {
+      return 'Game in progress';
+    }
+  };
+
   return (
     <div className="game-container">
       <div className="game-header flex justify-between items-center">
@@ -140,23 +155,33 @@ const Game = () => {
           <span>Room ID: {roomId} <button className="copy-button" onClick={copyRoomId} title="Copy Room ID">
             📋
           </button></span>
-          
+
         </div>
       </div>
 
       <div className="game-content">
         <div className="board-section">
-        <button
-            className="exit-button"
-            onClick={() => navigate('/lobby')}
+          {/* <button
+            className="leave-button"
+            onClick={() => navigate('/')}
           >
             &#8592;
-          </button>
+          </button> */}
           <ChessBoard
             playerColor={playerColor}
             isSpectator={isSpectator}
           />
         </div>
+
+        {/* <div className="game-info"> */}
+          {/* <h2>Room ID: {roomId}</h2> */}
+          {/* <div className="status-message">{getGameStatus()}</div> */}
+          {/* {(gameOver || opponentDisconnected) && (
+            <button className="exit-button" onClick={() => navigate('/')}>
+              Back to Home
+            </button>
+          )} */}
+        {/* </div> */}
 
         {/* <div className="chat-section">
           <div className="chat-header">

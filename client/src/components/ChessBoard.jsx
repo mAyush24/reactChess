@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
 import { useSocket } from '../context/SocketContext';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import '../assets/ChessBoard.css';
 
 const ChessBoard = ({ playerColor, isSpectator }) => {
@@ -18,10 +18,19 @@ const ChessBoard = ({ playerColor, isSpectator }) => {
   const [pendingMove, setPendingMove] = useState(null);
   const [selectedSquare, setSelectedSquare] = useState(null);
   const [possibleMoves, setPossibleMoves] = useState([]);
+  const [bothPlayersConnected, setBothPlayersConnected] = useState(false);
+  const [gameStartCountdown, setGameStartCountdown] = useState(null);
+  const [waitingForOpponent, setWaitingForOpponent] = useState(true);
+  const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
+  const [moveHistory, setMoveHistory] = useState([]);
+  const [currentMoveIndex, setCurrentMoveIndex] = useState(-1);
+  const [showSpectatorControls, setShowSpectatorControls] = useState(false);
   
+  const countdownTimerRef = useRef(null);
   const { socket } = useSocket();
   const { roomId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Function to handle making a move
   const makeMove = useCallback((move) => {
@@ -53,6 +62,64 @@ const ChessBoard = ({ playerColor, isSpectator }) => {
     return false;
   }, [game]);
 
+  // Prevent navigation without confirmation during active game
+  useEffect(() => {
+    if (!gameOver && !opponentDisconnected && !isSpectator && bothPlayersConnected) {
+      // This function runs when the user tries to navigate away
+      const handleBeforeUnload = (e) => {
+        const message = "Leaving the game will count as a forfeit. Are you sure you want to leave?";
+        e.preventDefault();
+        e.returnValue = message;
+        return message;
+      };
+      
+      // Handle browser back button
+      const handlePopState = (e) => {
+        // Show our custom leave confirmation dialog
+        setShowLeaveConfirmation(true);
+        // This prevents the default back navigation
+        window.history.pushState(null, document.title, window.location.href);
+        e.preventDefault();
+        return false;
+      };
+      
+      // Add push state to replace the current history entry
+      window.history.pushState(null, document.title, window.location.href);
+      
+      // Add event listeners
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      window.addEventListener('popstate', handlePopState);
+      
+      return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+  }, [gameOver, opponentDisconnected, isSpectator, bothPlayersConnected]);
+
+  // Start countdown when both players are connected - only for active players, not spectators
+  useEffect(() => {
+    if (bothPlayersConnected && gameStartCountdown === null && !gameOver && !opponentDisconnected && !isSpectator) {
+      setGameStartCountdown(3);
+      
+      countdownTimerRef.current = setInterval(() => {
+        setGameStartCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(countdownTimerRef.current);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    
+    return () => {
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+      }
+    };
+  }, [bothPlayersConnected, gameOver, opponentDisconnected, isSpectator]);
+
   // Handle receiving game updates
   useEffect(() => {
     if (!socket || !roomId) return;
@@ -67,17 +134,42 @@ const ChessBoard = ({ playerColor, isSpectator }) => {
         if (response.lastMove) {
           setLastMove(response.lastMove);
         }
+        
+        // Set connection status based on players in the room
+        if (response.playersConnected === 2) {
+          setBothPlayersConnected(true);
+          setWaitingForOpponent(false);
+        } else {
+          setBothPlayersConnected(false);
+          setWaitingForOpponent(true);
+        }
+        
+        // Get move history if available
+        if (response.moveHistory && response.moveHistory.length > 0) {
+          setMoveHistory(response.moveHistory);
+          setCurrentMoveIndex(response.moveHistory.length - 1);
+        }
+        
+        // If game is over, enable spectator controls
+        if (isSpectator && (response.status === 'ended' || response.gameOver)) {
+          setShowSpectatorControls(true);
+        }
       }
     });
     
     // Listen for board updates
-    socket.on('boardUpdate', ({ fen, lastMove, turn }) => {
+    socket.on('boardUpdate', ({ fen, lastMove, turn, moveHistory }) => {
       const newGame = new Chess(fen);
       setGame(newGame);
       setFen(fen);
       setPlayerTurn(turn);
       if (lastMove) {
         setLastMove(lastMove);
+      }
+      // Update move history if available
+      if (moveHistory) {
+        setMoveHistory(moveHistory);
+        setCurrentMoveIndex(moveHistory.length - 1);
       }
       // Clear any selection when the board updates
       setSelectedSquare(null);
@@ -91,10 +183,28 @@ const ChessBoard = ({ playerColor, isSpectator }) => {
       if (winner) {
         setWinner(winner);
       }
+      
+      // Enable spectator controls when game is over
+      if (isSpectator) {
+        setShowSpectatorControls(true);
+      }
+    });
+    
+    // Listen for player connection/disconnection
+    socket.on('playerConnected', ({ playersCount }) => {
+      if (playersCount === 2) {
+        setBothPlayersConnected(true);
+        setWaitingForOpponent(false);
+      }
     });
     
     // Listen for player disconnection
-    socket.on('playerDisconnected', ({ color }) => {
+    socket.on('playerDisconnected', ({ color, playersCount }) => {
+      if (playersCount < 2) {
+        setBothPlayersConnected(false);
+        setWaitingForOpponent(true);
+      }
+      
       if ((playerColor === 'white' && color === 'black') || 
           (playerColor === 'black' && color === 'white')) {
         setOpponentDisconnected(true);
@@ -103,17 +213,36 @@ const ChessBoard = ({ playerColor, isSpectator }) => {
         setGameOverReason('disconnect');
         setWinner(playerColor);
       }
+      
+      // Enable spectator controls if both players have left and user is spectator
+      if (isSpectator && playersCount === 0) {
+        setShowSpectatorControls(true);
+      }
+    });
+    
+    // Listen for room status updates
+    socket.on('roomStatusUpdate', ({ status }) => {
+      if (status === 'ended' && isSpectator) {
+        setShowSpectatorControls(true);
+      }
     });
     
     return () => {
       socket.off('boardUpdate');
       socket.off('gameOver');
       socket.off('playerDisconnected');
+      socket.off('playerConnected');
+      socket.off('roomStatusUpdate');
     };
-  }, [socket, roomId, playerColor]);
+  }, [socket, roomId, playerColor, isSpectator]);
 
   // Handle drop piece on the board
   const onDrop = (sourceSquare, targetSquare) => {
+    // Don't allow moves if waiting for opponent or during countdown
+    if (waitingForOpponent || (gameStartCountdown !== null && gameStartCountdown > 0)) {
+      return false;
+    }
+    
     if (isSpectator || gameOver || opponentDisconnected) return false;
     if ((playerTurn === 'w' && playerColor !== 'white') || 
         (playerTurn === 'b' && playerColor !== 'black')) return false;
@@ -124,15 +253,17 @@ const ChessBoard = ({ playerColor, isSpectator }) => {
     
     // Check if this move is a pawn promotion
     if (isPawnPromotion(sourceSquare, targetSquare)) {
+      // Show our custom promotion UI
       setPromotionSquare(targetSquare);
       setPendingMove({ from: sourceSquare, to: targetSquare });
-      return true; // Return true to allow the piece to be moved on the board
+      return true; // Allow the piece to move visually on the board
     }
     
+    // For non-promotion moves, process normally
     const move = {
       from: sourceSquare,
       to: targetSquare,
-      promotion: 'q' // Only used for non-promotion moves or fallback
+      promotion: 'q' // Only used for non-promotion moves
     };
     
     const moveResult = makeMove(move);
@@ -150,20 +281,27 @@ const ChessBoard = ({ playerColor, isSpectator }) => {
   const handlePromotionPieceSelection = (piece) => {
     if (!pendingMove) return;
     
+    // Create the complete move object with the selected promotion piece
     const move = {
       from: pendingMove.from,
       to: pendingMove.to,
       promotion: piece
     };
     
+    // Execute the move on the local board
     const moveResult = makeMove(move);
     
     if (moveResult) {
-      // Emit move to server
+      // Send the move to the server
       socket.emit('makeMove', { roomId, move });
+    } else {
+      console.error('Invalid promotion move');
+      // Reset the board to its previous state if the move was invalid
+      const newGame = new Chess(fen);
+      setGame(newGame);
     }
     
-    // Reset promotion state
+    // Reset promotion state regardless of move success
     setPromotionSquare(null);
     setPendingMove(null);
   };
@@ -194,14 +332,26 @@ const ChessBoard = ({ playerColor, isSpectator }) => {
   };
 
   const getGameStatus = () => {
-    if (gameOver) {
+    // Show waiting message if opponent hasn't connected
+    if (waitingForOpponent && !isSpectator) {
+      return 'Waiting for opponent to join...';
+    }
+    
+    // Show countdown if game is about to start - only for active players
+    if (gameStartCountdown !== null && gameStartCountdown > 0 && !isSpectator) {
+      return `Game starting in ${gameStartCountdown}...`;
+    }
+
+    if (gameOver ) {
       switch (gameOverReason) {
         case 'checkmate':
           return `Checkmate! ${playerTurn === 'w' ? 'Black' : 'White'} wins!`;
         case 'forfeit':
           return `Game over! ${winner === 'white' ? 'White' : 'Black'} wins by forfeit!`;
         case 'disconnect':
-          return `Opponent disconnected. You win!`;
+          return isSpectator 
+            ? `Game ended: Player disconnected` 
+            : `Opponent disconnected. You win!`;
         case 'draw':
           return 'Game ended in a draw';
         case 'stalemate':
@@ -216,10 +366,15 @@ const ChessBoard = ({ playerColor, isSpectator }) => {
     }
     
     if (opponentDisconnected) {
-      return 'Opponent disconnected. Game over!';
+      return isSpectator 
+        ? 'Game ended: Player disconnected' 
+        : 'Opponent disconnected. Game over!';
     }
     
-    if (isSpectator) {
+    if (isSpectator && !gameOver) {
+      // if (showSpectatorControls) {
+      //   return `Viewing game history - Move ${currentMoveIndex + 1}/${moveHistory.length}`;
+      // }
       return `You are spectating. ${playerTurn === 'w' ? 'White' : 'Black'}'s turn`;
     }
     
@@ -232,7 +387,25 @@ const ChessBoard = ({ playerColor, isSpectator }) => {
   };
 
   const exitGame = () => {
-    navigate('/lobby');
+    // If the game is still running and not in spectator mode, show confirmation
+    if (!gameOver && !opponentDisconnected && !isSpectator) {
+      setShowLeaveConfirmation(true);
+    } else {
+      // Otherwise, just navigate away
+      navigate('/');
+    }
+  };
+
+  const confirmLeaveGame = () => {
+    // Emit forfeit event to the server
+    if (socket && socket.connected) {
+      socket.emit('forfeitGame', { roomId, color: playerColor });
+    }
+    navigate('/');
+  };
+
+  const cancelLeaveGame = () => {
+    setShowLeaveConfirmation(false);
   };
 
   // Calculate possible moves for a selected piece
@@ -255,6 +428,11 @@ const ChessBoard = ({ playerColor, isSpectator }) => {
   
   // Handle square click to select a piece and show possible moves
   const onSquareClick = (square) => {
+    // Don't allow moves if waiting for opponent or during countdown
+    if (waitingForOpponent || (gameStartCountdown !== null && gameStartCountdown > 0)) {
+      return;
+    }
+    
     // Don't allow interaction if spectator, game over, or opponent disconnected
     if (isSpectator || gameOver || opponentDisconnected) return;
     
@@ -268,21 +446,22 @@ const ChessBoard = ({ playerColor, isSpectator }) => {
     if (selectedSquare) {
       // Check if the clicked square is a valid move destination
       if (possibleMoves.includes(square)) {
-        // If it's a valid move, execute it
-        const move = {
-          from: selectedSquare,
-          to: square,
-          promotion: 'q' // This will be handled by the promotion UI if needed
-        };
-        
         // Check if this move is a pawn promotion
         if (isPawnPromotion(selectedSquare, square)) {
+          // Show our custom promotion UI
           setPromotionSquare(square);
           setPendingMove({ from: selectedSquare, to: square });
           setSelectedSquare(null);
           setPossibleMoves([]);
           return;
         }
+        
+        // For non-promotion moves, process normally
+        const move = {
+          from: selectedSquare,
+          to: square,
+          promotion: 'q' // Only used for non-promotion moves
+        };
         
         const result = makeMove(move);
         
@@ -299,7 +478,7 @@ const ChessBoard = ({ playerColor, isSpectator }) => {
       // If clicked on own piece, select it instead
       if (piece && 
           ((piece.color === 'w' && playerColor === 'white') || 
-           (piece.color === 'b' && playerColor === 'black'))) {
+          (piece.color === 'b' && playerColor === 'black'))) {
         setSelectedSquare(square);
         setPossibleMoves(getPossibleMovesForPiece(square));
         return;
@@ -323,16 +502,88 @@ const ChessBoard = ({ playerColor, isSpectator }) => {
     }
   };
 
+  // Spectator replay controls
+  const handleUndoMove = () => {
+    if (!isSpectator || currentMoveIndex < 0) return;
+    
+    // Show previous position
+    if (currentMoveIndex > 0) {
+      const previousIndex = currentMoveIndex - 1;
+      const previousPosition = moveHistory[previousIndex];
+      
+      if (previousPosition) {
+        const newGame = new Chess(previousPosition.fen);
+        setGame(newGame);
+        setFen(previousPosition.fen);
+        setPlayerTurn(previousPosition.turn);
+        setLastMove(previousPosition.lastMove);
+        setCurrentMoveIndex(previousIndex);
+      } else if (previousIndex === 0) {
+        // Go to initial position
+        const newGame = new Chess();
+        setGame(newGame);
+        setFen(newGame.fen());
+        // setPlayerTurn('w');
+        setLastMove(null);
+        setCurrentMoveIndex(-1);
+      }
+    } else if (currentMoveIndex === 0) {
+      // Go to initial position
+      const newGame = new Chess();
+      setGame(newGame);
+      setFen(newGame.fen());
+      // setPlayerTurn('w');
+      setLastMove(null);
+      setCurrentMoveIndex(-1);
+    }
+  };
+  
+  const handleRedoMove = () => {
+    if (!isSpectator || currentMoveIndex >= moveHistory.length - 1) return;
+    
+    // Show next position
+    const nextIndex = currentMoveIndex + 1;
+    const nextPosition = moveHistory[nextIndex];
+    
+    if (nextPosition) {
+      const newGame = new Chess(nextPosition.fen);
+      setGame(newGame);
+      setFen(nextPosition.fen);
+      setPlayerTurn(nextPosition.turn);
+      setLastMove(nextPosition.lastMove);
+      setCurrentMoveIndex(nextIndex);
+    }
+  };
+
   return (
     <div className="chess-board-container">
       <div className="game-info">
         {/* <h2>Room ID: {roomId}</h2> */}
-        <div className="status-message">{getGameStatus()}</div>
-        {(gameOver || opponentDisconnected) && (
-          <button className="exit-button" onClick={exitGame}>
-            Back to Lobby
-          </button>
-        )}
+        <div className="game-controls">
+          
+          
+          {(gameOver || opponentDisconnected) && (
+            <button className="exit-button" onClick={exitGame}>
+              Back to Home
+            </button>
+          )}
+          {/* Add leave button for active games */}
+          {!gameOver && !opponentDisconnected && !isSpectator && (
+            <button className="leave-button" onClick={() => setShowLeaveConfirmation(true)}>
+              Leave Game
+            </button>
+          )}
+          {/* {isSpectator && (
+            <button className="leave-button" onClick={() => navigate('/lobby')}>
+              Back to Lobby
+            </button>
+          )} */}
+        </div>
+        <div className="status-message" 
+          data-countdown={gameStartCountdown !== null && gameStartCountdown > 0 && !isSpectator ? "true" : "false"}
+          data-waiting={waitingForOpponent && !isSpectator ? "true" : "false"}>
+          {getGameStatus()}
+        </div>
       </div>
       
       
@@ -381,7 +632,33 @@ const ChessBoard = ({ playerColor, isSpectator }) => {
           }}
           areArrowsAllowed={false}
           showBoardNotation={true}
+          showPromotionDialog={false}
         />
+
+        {/* Show undo/redo controls for spectators after game is over */}
+        {isSpectator && showSpectatorControls && (
+            <div className="spectator-controls">
+              <button 
+                className="spectator-button" 
+                onClick={handleUndoMove} 
+                disabled={currentMoveIndex < 0}
+              >
+                ← Previous
+              </button>
+              <button 
+                className="spectator-button" 
+                onClick={handleRedoMove} 
+                disabled={currentMoveIndex >= moveHistory.length - 1}
+              >
+                Next →
+              </button>
+            </div>
+        )}
+        { showSpectatorControls && (
+          <div className='status-message'>
+            Viewing game history - Move {currentMoveIndex + 1}/{moveHistory.length}
+          </div>
+        )}
         
         {/* Promotion Selection UI */}
         {promotionSquare && (
@@ -410,6 +687,27 @@ const ChessBoard = ({ playerColor, isSpectator }) => {
           </div>
         )}
       </div>
+      
+      {/* Leave Game Confirmation Modal */}
+      {showLeaveConfirmation && (
+        <div className="promotion-selection">
+          <div className="promotion-overlay"></div>
+          <div className="promotion-options">
+            <div className="promotion-title">Leave Game?</div>
+            <p className="confirmation-message">
+              Leaving the game will count as a forfeit and you will lose the match.
+            </p>
+            <div className="confirmation-buttons">
+              <button className="cancel-button" onClick={cancelLeaveGame}>
+                Stay
+              </button>
+              <button className="confirm-button" onClick={confirmLeaveGame}>
+                Leave & Forfeit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

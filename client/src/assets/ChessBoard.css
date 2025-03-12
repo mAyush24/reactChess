@@ -33,6 +33,49 @@
   text-align: center;
   color: #333;
   font-weight: 500;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-controls {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.spectator-controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 2rem 0;
+  width: 100%;
+}
+
+.spectator-button {
+  background-color: #4a65a3;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  font-size: 0.9rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+}
+
+.spectator-button:hover:not(:disabled) {
+  background-color: #3a5183;
+  transform: translateY(-2px);
+}
+
+.spectator-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .board-wrapper {
@@ -71,6 +114,23 @@
   transition: background-color 0.3s;
 }
 
+.leave-button {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  font-size: 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+  font-weight: 600;
+}
+
+.leave-button:hover {
+  background-color: #c0392b;
+  transform: translateY(-2px);
+}
 
 /* Promotion Selection UI */
 .promotion-selection {
@@ -83,6 +143,7 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  pointer-events: auto; /* Ensure the UI is clickable */
 }
 
 .promotion-overlay {
@@ -115,6 +176,7 @@
   font-weight: 600;
   color: #333;
   text-align: center;
+  margin-bottom: 5px;
 }
 
 .promotion-pieces {
@@ -152,6 +214,7 @@
   cursor: pointer;
   font-size: 1rem;
   transition: background-color 0.2s;
+  margin-top: 5px;
 }
 
 .cancel-button:hover {
@@ -247,5 +310,73 @@
   
   .cancel-button:active {
     background-color: #c0392b;
+  }
+}
+
+/* Confirmation dialog styles */
+.confirmation-message {
+  font-size: 1rem;
+  color: #444;
+  text-align: center;
+  margin: 10px 0 20px;
+  line-height: 1.4;
+}
+
+.confirmation-buttons {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  gap: 10px;
+}
+
+.confirmation-buttons button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.confirm-button {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+}
+
+.confirm-button:hover {
+  background-color: #c0392b;
+  transform: translateY(-2px);
+}
+
+/* Animation for countdown */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.status-message[data-countdown="true"] {
+  animation: pulse 1s infinite;
+  background-color: #f8d7da;
+  color: #721c24;
+  font-weight: 700;
+}
+
+.status-message[data-waiting="true"] {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+/* Mobile responsiveness for confirmation */
+@media (max-width: 480px) {
+  .confirmation-message {
+    font-size: 0.9rem;
+    margin: 8px 0 15px;
+  }
+  
+  .confirmation-buttons button {
+    padding: 8px;
+    font-size: 0.9rem;
   }
 } 
