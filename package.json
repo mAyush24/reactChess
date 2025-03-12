@@ -1,0 +1,21 @@
+{
+  "name": "reactchess",
+  "version": "1.0.0",
+  "description": "A multiplayer chess game built with React, Socket.io, and Express.",
+  "homepage": "https://github.com/mAyush24/reactChess#readme",
+  "bugs": {
+    "url": "https://github.com/mAyush24/reactChess/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mAyush24/reactChess.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm install --prefix client && npm install --prefix server && npm run build --prefix client",
+    "start": "npm run start --prefix server"
+  }
+}
