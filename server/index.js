@@ -7,14 +7,19 @@ const { v4: uuidv4 } = require('uuid');
 require('dotenv').config();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL || "http://localhost:5173",
+  methods: ["GET", "POST"],
+  credentials: true
+}));
 app.use(express.json());
 
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: process.env.CLIENT_URL || "http://localhost:5173",
-    methods: ["GET", "POST"]
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
@@ -274,6 +279,11 @@ app.get('/api/rooms', (req, res) => {
     }));
   
   res.json(publicRooms);
+});
+
+// Health check endpoint for Vercel
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
 });
 
 const PORT = process.env.PORT || 3001 || 10000;
