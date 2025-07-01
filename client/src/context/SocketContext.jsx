@@ -12,12 +12,15 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     // Initialize socket connection with proper configuration
     const newSocket = io(serverUrl, {
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'], // Start with polling, then upgrade to websocket
       withCredentials: true,
       path: '/socket.io/',
       reconnection: true,
       reconnectionAttempts: 5,
-      reconnectionDelay: 1000
+      reconnectionDelay: 1000,
+      timeout: 60000,
+      autoConnect: true,
+      forceNew: true
     });
 
     newSocket.on('connect', () => {
@@ -33,6 +36,11 @@ export const SocketProvider = ({ children }) => {
     newSocket.on('connect_error', (error) => {
       console.log('Connection error:', error);
       setConnected(false);
+      // Try to reconnect with polling if websocket fails
+      if (newSocket.io.opts.transports.includes('websocket')) {
+        console.log('Falling back to polling');
+        newSocket.io.opts.transports = ['polling'];
+      }
     });
 
     setSocket(newSocket);
