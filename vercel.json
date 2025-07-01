@@ -9,18 +9,22 @@
       "src": "client/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "client/dist"
+        "distDir": "dist"
       }
     }
   ],
   "routes": [
     {
+      "src": "/socket.io/(.*)",
+      "dest": "server/index.js"
+    },
+    {
       "src": "/api/(.*)",
       "dest": "server/index.js"
     },
     {
-      "src": "(.*)",
-      "dest": "client/dist/$1"
+      "src": "/(.*)",
+      "dest": "client/$1"
     }
   ]
 } 

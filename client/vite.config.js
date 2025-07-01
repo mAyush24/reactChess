@@ -7,5 +7,12 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: true
+  },
+  define: {
+    'process.env.VITE_SERVER_URL': JSON.stringify(process.env.VITE_SERVER_URL || 'http://localhost:3000')
   }
 })
