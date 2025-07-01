@@ -10,8 +10,15 @@ export const SocketProvider = ({ children }) => {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    // Initialize socket connection
-    const newSocket = io(serverUrl);
+    // Initialize socket connection with proper configuration
+    const newSocket = io(serverUrl, {
+      transports: ['websocket', 'polling'],
+      withCredentials: true,
+      path: '/socket.io/',
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
+    });
 
     newSocket.on('connect', () => {
       console.log('Connected to server');

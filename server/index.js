@@ -10,8 +10,7 @@ const app = express();
 const allowedOrigins = [
   process.env.CLIENT_URL,
   'http://localhost:5173',
-  'https://react-chess-client.vercel.app',
-  'https://react-chess-git-main.vercel.app'
+  'https://react-chess-eta.vercel.app'
 ];
 
 app.use(cors({
@@ -22,7 +21,7 @@ app.use(cors({
       callback(new Error('Not allowed by CORS'));
     }
   },
-  methods: ["GET", "POST"],
+  methods: ["GET", "POST", "OPTIONS"],
   credentials: true
 }));
 app.use(express.json());
@@ -30,16 +29,13 @@ app.use(express.json());
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    methods: ["GET", "POST"],
-    credentials: true
-  }
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "OPTIONS"],
+    credentials: true,
+    transports: ['websocket', 'polling']
+  },
+  allowEIO3: true,
+  path: "/socket.io/"
 });
 
 // Store active game rooms
