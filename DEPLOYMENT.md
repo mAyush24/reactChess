@@ -78,6 +78,12 @@ In Render dashboard, go to your service → Environment → Add Environment Vari
    - Make sure to redeploy after adding environment variables
    - Check that variable names match exactly (case-sensitive)
 
+5. **MIME Type Errors**:
+   - This error occurs when the server serves HTML instead of JavaScript files
+   - The `vercel.json` configuration should handle SPA routing correctly
+   - If the error persists, try clearing browser cache or using incognito mode
+   - Ensure the build process completes successfully before deployment
+
 ### Useful Commands:
 
 ```bash
